@@ -1,0 +1,81 @@
+TAREA 2
+
+--Query del Ejercicio 1
+WITH rents_per_day AS (
+    SELECT
+        c.customer_id,
+        r.rental_date,
+        COUNT(*) AS rent_count
+    FROM
+        rental r
+    INNER JOIN customer c ON r.customer_id = c.customer_id
+    GROUP BY
+        c.customer_id,
+        r.rental_date
+)
+SELECT
+    c.customer_id,
+    c.first_name,
+    c.last_name,
+    rpd.rental_date,
+    rpd.rent_count
+FROM
+    customer c
+INNER JOIN rents_per_day rpd ON c.customer_id = rpd.customer_id
+WHERE
+    rpd.rent_count > 1
+ORDER BY
+    rpd.rental_date;
+
+--Query del Ejercicio 2
+SELECT
+    EXTRACT(MONTH FROM r.rental_date) AS month,
+    EXTRACT(YEAR FROM r.rental_date) AS year,
+    co.country,
+    COUNT(*) AS total_rentals
+FROM
+    rental r
+INNER JOIN customer c ON r.customer_id = c.customer_id
+INNER JOIN address a ON c.address_id = a.address_id
+INNER JOIN city ci ON a.city_id = ci.city_id
+INNER JOIN country co ON ci.country_id = co.country_id
+GROUP BY
+    EXTRACT(MONTH FROM r.rental_date),
+    EXTRACT(YEAR FROM r.rental_date),
+    co.country
+ORDER BY
+    EXTRACT(YEAR FROM r.rental_date),
+    EXTRACT(MONTH FROM r.rental_date),
+    co.country;
+
+--Query del Ejercicio 3
+SELECT
+    TO_CHAR(p.payment_date, 'YYYY-MM') AS "Año-Mes",
+    s.staff_id AS "Código de Empleado",
+    CONCAT(s.first_name, ' ', s.last_name) AS "Nombre Completo del Empleado",
+    c.city AS "Ciudad de la Sucursal",
+    SUM(p.amount) AS "Monto Total Pagado"
+FROM
+    payment p
+INNER JOIN staff s ON p.staff_id = s.staff_id
+INNER JOIN store st ON s.store_id = st.store_id
+INNER JOIN address a ON st.address_id = a.address_id
+INNER JOIN city c ON a.city_id = c.city_id
+GROUP BY
+    TO_CHAR(p.payment_date, 'YYYY-MM'),
+    s.staff_id,
+    CONCAT(s.first_name, ' ', s.last_name),
+    c.city
+ORDER BY
+    "Año-Mes",
+    "Código de Empleado";
+
+--Query del Ejercicio 4
+SELECT
+  TO_CHAR(DATE_TRUNC('month', rental_date), 'YYYY-MM') AS "Mes_renta",
+  TO_CHAR(DATE_TRUNC('month', payment_date), 'YYYY-MM') AS "Mes_renta_Payment"
+FROM
+    rental r
+JOIN payment pa
+ON r.rental_id = pa.rental_id
+WHERE NOT TO_CHAR(DATE_TRUNC('month', rental_date), 'YYYY-MM') =TO_CHAR(DATE_TRUNC('month', payment_date), 'YYYY-MM')
